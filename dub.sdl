@@ -1,0 +1,7 @@
+name "222"
+description "A minimal D application."
+copyright "Copyright © 2016, drug"
+authors "drug"
+dependency "gfm:sdl2" version="~>3.0.5"
+dependency "gfm:math" version="~>3.0.5"
+dependency "gfm:opengl" version="~>3.0.5"

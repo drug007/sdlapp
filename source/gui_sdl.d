@@ -123,41 +123,36 @@ class SdlGui(Vertex)
 
     auto run()
     {
-        import gfm.sdl2: SDL_GetTicks;
+        import gfm.sdl2: SDL_GetTicks, SDL_QUIT, SDL_KEYDOWN, SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN,
+            SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION, SDL_MOUSEWHEEL, SDLK_ESCAPE;
 
-        enum FRAME_RATE = 60;
-        auto last_update = SDL_GetTicks();
         while(!_sdl2.keyboard.isPressed(SDLK_ESCAPE)) 
         {
             SDL_Event event;
-            _sdl2.pollEvent(&event);
-            
-            // обрабатываем только последнее событие
-            switch(event.type)
+            while(_sdl2.pollEvent(&event))
             {
-                case SDL_QUIT:            return;
-                case SDL_KEYDOWN:         onKeyDown(event);
-                break;
-                case SDL_KEYUP:           onKeyUp(event);
-                break;
-                case SDL_MOUSEBUTTONDOWN: onMouseDown(event);
-                break;
-                case SDL_MOUSEBUTTONUP:   onMouseUp(event);
-                break;
-                case SDL_MOUSEMOTION:     onMouseMotion(event);
-                break;
-                case SDL_MOUSEWHEEL:      onMouseWheel(event);
-                break;
-                default:
+                processImguiEvent(event);
+                
+                switch(event.type)
+                {
+                    case SDL_QUIT:            return;
+                    case SDL_KEYDOWN:         onKeyDown(event);
+                    break;
+                    case SDL_KEYUP:           onKeyUp(event);
+                    break;
+                    case SDL_MOUSEBUTTONDOWN: onMouseDown(event);
+                    break;
+                    case SDL_MOUSEBUTTONUP:   onMouseUp(event);
+                    break;
+                    case SDL_MOUSEMOTION:     onMouseMotion(event);
+                    break;
+                    case SDL_MOUSEWHEEL:      onMouseWheel(event);
+                    break;
+                    default:
+                }
             }
 
-            // Отрисовываем картинку только если прошло время - тем
-            // самым мы избегаем прорисовки по каждому событию
-            if (SDL_GetTicks() > last_update + 1000./FRAME_RATE)
-            {
-                draw();
-                last_update = SDL_GetTicks();
-            }
+            draw();
         }
     }
 
@@ -224,8 +219,8 @@ protected:
     public void setMatrices(ref const(vec3f) max_space, ref const(vec3f) min_space)
     {
         {
-            auto xw = (max_space.x - min_space.x);
-            auto yw = (max_space.y - min_space.y);
+            const xw = (max_space.x - min_space.x);
+            const yw = (max_space.y - min_space.y);
 
             size = (xw > yw) ? xw/2 : yw/2;
         }
@@ -236,7 +231,12 @@ protected:
         updateMatrices(max_space, min_space);
     }
 
-    void onKeyDown(ref const(SDL_Event) event)
+    public void processImguiEvent(ref const(SDL_Event) event)
+    {
+
+    }
+
+    public void onKeyDown(ref const(SDL_Event) event)
     {
         
     }

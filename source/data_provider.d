@@ -36,6 +36,7 @@ struct IntermediateData
 
 struct DataProvider
 {
+	// bounding box
 	vec3f minimal;
     vec3f maximum;
 
@@ -84,7 +85,7 @@ struct DataProvider
 	            }
 	        }
 
-	        // finding minimal and maximum values
+	        // finding minimal and maximum values of bounding box
 	        if(!e.x.isNaN)
 	        {
 	        	if(e.x > maximum.x)

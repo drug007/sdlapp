@@ -14,7 +14,7 @@ class MyGui : SdlGui
 {
     private
     {
-        VertexProvider _vprovider;
+        DataProvider _data_provider;
 
         bool show_test_window    = false;
         bool show_another_window = false;
@@ -25,7 +25,7 @@ class MyGui : SdlGui
         float[3] clear_color = [0.3f, 0.4f, 0.8f];
     }
 
-    this(int width, int height, ref VertexProvider vprovider)
+    this(int width, int height, ref DataProvider dprovider)
     {
         import gui_imgui: imguiInit, igGetStyle;
 
@@ -36,9 +36,9 @@ class MyGui : SdlGui
             GrabRounding  = 4.0;
         }
 
-        _vprovider = vprovider;
-        super(width, height, _vprovider.vertices);
-        _vprovider.setPointCount(max_point_counts);
+        _data_provider = dprovider;
+        super(width, height, _data_provider.vertex_provider.vertices);
+        _data_provider.vertex_provider.setPointCount(max_point_counts);
     }
 
     void close()
@@ -53,7 +53,7 @@ class MyGui : SdlGui
     {
         glPointSize(5.);
         vao_points.bind();
-        foreach(vslice; _vprovider.currSlices)
+        foreach(vslice; _data_provider.vertex_provider.currSlices)
         {
             auto length = cast(int) vslice.length;
             auto start  = cast(int) vslice.start;
@@ -92,9 +92,9 @@ class MyGui : SdlGui
             igSliderInt("Max point counts", &max_point_counts, 1, 32);
             if(old_value != max_point_counts)
             {
-                _vprovider.setPointCount(max_point_counts);
+                _data_provider.vertex_provider.setPointCount(max_point_counts);
             }
-            igEnd();   
+            igEnd();
         }
 
         // 1. Show a simple window
@@ -161,14 +161,10 @@ int main(string[] args)
     int height = 768;
 
     auto dprovider = DataProvider(testData);
-    version(all)
-        auto vprovider = dprovider.vertex_provider;
-    else
-        auto vprovider = testVertexProvider();
 
-    auto gui = new MyGui(width, height, vprovider);
-    auto max_value = vprovider.maximum;
-    auto min_value = vprovider.minimal;
+    auto gui = new MyGui(width, height, dprovider);
+    auto max_value = dprovider.maximum;
+    auto min_value = dprovider.minimal;
     gui.setMatrices(max_value, min_value);
     gui.run();
     gui.close();

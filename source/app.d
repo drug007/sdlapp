@@ -37,7 +37,7 @@ class MyGui : SdlGui
         }
 
         _data_provider = dprovider;
-        super(width, height, _data_provider.vertex_provider.vertices);
+        super(width, height, _data_provider.vertex_provider);
         setTimeWindow();
     }
 
@@ -45,7 +45,7 @@ class MyGui : SdlGui
     {
         _data_provider.setTimeWindow(long.min, _data_provider.timestamp_slider.current);
         _data_provider.vertex_provider.setPointCount(max_point_counts);
-        setVertices(_data_provider.vertex_provider.vertices);
+        setVertices(_data_provider.vertex_provider);
     }
 
     void close()

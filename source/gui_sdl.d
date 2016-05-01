@@ -27,11 +27,11 @@ import gfm.sdl2: SDL2, SDL2Window, SDL_GL_SetAttribute, SharedLibVersion,
     SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION, SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT,
     SDL_BUTTON_MIDDLE, SDLK_SPACE, SDL_MOUSEWHEEL, SDL_KEYUP;
 
-import vertex_provider: Vertex;
+import vertex_provider: Vertex, VertexProvider;
 
 class SdlGui
 {
-    this(int width, int height, Vertex[] vertices)
+    this(int width, int height, ref VertexProvider vertex_provider)
     {
         this.width = width;
         this.height = height;
@@ -96,8 +96,8 @@ class SdlGui
         };
 
         program = new GLProgram(_gl, program_source);
-        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices);
-        indices = iota(0, vertices.length).map!"cast(uint)a".array;
+        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertex_provider.vertices);
+        indices = iota(0, vertex_provider.vertices.length).map!"cast(uint)a".array;
         
         // Create an OpenGL vertex description from the Vertex structure.
         vert_spec = new VertexSpecification!Vertex(program);
@@ -123,11 +123,11 @@ class SdlGui
         _sdl2.destroy();
     }
 
-    public auto setVertices(Vertex[] vertices)
+    public auto setVertices(ref VertexProvider vertex_provider)
     {
         point_vbo.destroy();
-        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices);
-        indices = iota(0, vertices.length).map!"cast(uint)a".array;
+        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertex_provider.vertices);
+        indices = iota(0, vertex_provider.vertices.length).map!"cast(uint)a".array;
         
         // prepare VAO
         {

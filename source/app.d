@@ -29,10 +29,17 @@ class MyGui : SdlGui!(Vertex)
 
     this(int width, int height, Vertex[] vertices, VertexSlice[] vslices)
     {
-        import gui_imgui: imguiInit;
+        import gui_imgui: imguiInit, igGetStyle;
 
         super(width, height, vertices);
+        
         imguiInit(window);
+        with(igGetStyle())
+        {
+            FrameRounding = 4.0;
+            GrabRounding  = 4.0;
+        }
+
         this.vslices = vslices;
     }
 

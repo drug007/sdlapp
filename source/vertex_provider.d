@@ -22,17 +22,36 @@ struct VertexProvider
 
 	auto slices()
 	{
-		return _vslices;
+		return _slices;
 	}
 
-	this(Vertex[] vertices, VertexSlice[] vslices)
+	auto currSlices()
 	{
-		_vertices = vertices;
-		_vslices  = vslices; 
+		return _curr_slices;
+	}
+
+	/// allow rendering of only n last points
+	auto setPointCount(int n)
+	{
+		import std.algorithm: min;
+		import std.range: lockstep;
+
+		foreach(s, ref cs; lockstep(_slices, _curr_slices))
+        {
+            cs.length = min(cast(int) (s.length), n);
+            cs.start = cast(int) (s.start + s.length - cs.length);
+        }
+	}
+
+	this(Vertex[] vertices, VertexSlice[] slices)
+	{
+		_vertices    = vertices;
+		_slices      = slices; 
+		_curr_slices = slices.dup;
 	}
 
 private:
-	VertexSlice[] _vslices;
+	VertexSlice[] _slices, _curr_slices;
 	Vertex[]      _vertices;
 
 }

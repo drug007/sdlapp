@@ -11,11 +11,18 @@ import vertex_provider: VertexProvider, testVertexProvider;
 
 class MyGui : SdlGui
 {
-    private VertexProvider _vprovider;
+    private
+    {
+        VertexProvider _vprovider;
 
-    bool show_test_window = true;
-    bool show_another_window = false;
-    float[3] clear_color = [0.3f, 0.4f, 0.8f];
+        bool show_test_window    = false;
+        bool show_another_window = false;
+        bool show_settings       = true;
+
+        int max_point_counts = 2;
+
+        float[3] clear_color = [0.3f, 0.4f, 0.8f];
+    }
 
     this(int width, int height, ref VertexProvider vprovider)
     {
@@ -30,6 +37,8 @@ class MyGui : SdlGui
             FrameRounding = 4.0;
             GrabRounding  = 4.0;
         }
+
+        _vprovider.setPointCount(max_point_counts);
     }
 
     void close()
@@ -44,11 +53,13 @@ class MyGui : SdlGui
     {
         glPointSize(5.);
         vao_points.bind();
-        foreach(vslice; _vprovider.slices)
+        foreach(vslice; _vprovider.currSlices)
         {
-            glDrawElements(GL_LINE_STRIP, cast(int) (vslice
-                .length), GL_UNSIGNED_INT, &indices[vslice.start]);
-            glDrawArrays(GL_POINTS, cast(int) (vslice.start), cast(int) (vslice.length));
+            auto length = cast(int) vslice.length;
+            auto start  = cast(int) vslice.start;
+
+            glDrawElements(GL_LINE_STRIP, length, GL_UNSIGNED_INT, &indices[start]);
+            glDrawArrays(GL_POINTS, start, length);
         }
         vao_points.unbind();
     }
@@ -67,12 +78,24 @@ class MyGui : SdlGui
         import derelict.imgui.imgui: igText, igButton, igBegin, igEnd, igRender, igGetIO,
             igSliderFloat, igColorEdit3, igTreePop, igTreeNode, igSameLine, igSmallButton,
             ImGuiIO, igSetNextWindowSize, igSetNextWindowPos, igTreeNodePtr, igShowTestWindow,
-            ImVec2, ImGuiSetCond_FirstUseEver;
+            ImVec2, ImGuiSetCond_FirstUseEver, igSliderInt;
 		import gui_imgui: imguiNewFrame;
         
         ImGuiIO* io = igGetIO();
 
         imguiNewFrame(window);
+
+        {
+            igSetNextWindowSize(ImVec2(400,600), ImGuiSetCond_FirstUseEver);
+            igBegin("Settings", &show_settings);
+            auto old_value = max_point_counts;
+            igSliderInt("Max point counts", &max_point_counts, 1, 32);
+            if(old_value != max_point_counts)
+            {
+                _vprovider.setPointCount(max_point_counts);
+            }
+            igEnd();   
+        }
 
         // 1. Show a simple window
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"

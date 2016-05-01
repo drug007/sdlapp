@@ -7,9 +7,9 @@ import gfm.opengl: OpenGL, GLProgram, GLBuffer, VertexSpecification, GLVAO,
     GL_DEPTH_BUFFER_BIT, GL_LINE_STRIP, GL_UNSIGNED_INT,
     GL_COLOR_BUFFER_BIT, GL_POINTS;
 import gfm.sdl2: SDL_Event;
-import vertex_provider: Vertex, VertexProvider, testVertexProvider;
+import vertex_provider: VertexProvider, testVertexProvider;
 
-class MyGui : SdlGui!(Vertex)
+class MyGui : SdlGui
 {
     private VertexProvider _vprovider;
 

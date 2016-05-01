@@ -27,7 +27,9 @@ import gfm.sdl2: SDL2, SDL2Window, SDL_GL_SetAttribute, SharedLibVersion,
     SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION, SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT,
     SDL_BUTTON_MIDDLE, SDLK_SPACE, SDL_MOUSEWHEEL, SDL_KEYUP;
 
-class SdlGui(Vertex)
+import vertex_provider: Vertex;
+
+class SdlGui
 {
     this(int width, int height, Vertex[] vertices)
     {

@@ -43,16 +43,29 @@ struct VertexProvider
         }
 	}
 
-	this(Vertex[] vertices, VertexSlice[] slices)
+    auto minimal() const
+    {
+        return _min;
+    }
+
+    auto maximum() const
+    {
+        return _max;
+    }
+
+	this(Vertex[] vertices, VertexSlice[] slices, vec3f minimal, vec3f maximum)
 	{
 		_vertices    = vertices;
 		_slices      = slices; 
 		_curr_slices = slices.dup;
+        _min         = minimal;
+        _max         = maximum;
 	}
 
 private:
 	VertexSlice[] _slices, _curr_slices;
 	Vertex[]      _vertices;
+    vec3f         _min, _max;
 
 }
 
@@ -181,5 +194,8 @@ auto testVertexProvider()
         VertexSlice(29, 16), 
         VertexSlice(58, 32), 
         VertexSlice( 0, 16),
-    ]);
+    ],
+    vec3f(0, 0, 0),
+    vec3f(10_000, 60_000, 0)
+    );
 }

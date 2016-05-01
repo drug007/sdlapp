@@ -8,6 +8,7 @@ import gfm.opengl: OpenGL, GLProgram, GLBuffer, VertexSpecification, GLVAO,
     GL_COLOR_BUFFER_BIT, GL_POINTS;
 import gfm.sdl2: SDL_Event;
 import vertex_provider: VertexProvider, testVertexProvider;
+import data_provider: testData, DataProvider;
 
 class MyGui : SdlGui
 {
@@ -28,9 +29,6 @@ class MyGui : SdlGui
     {
         import gui_imgui: imguiInit, igGetStyle;
 
-        _vprovider = vprovider;
-        super(width, height, _vprovider.vertices);
-        
         imguiInit(window);
         with(igGetStyle())
         {
@@ -38,6 +36,8 @@ class MyGui : SdlGui
             GrabRounding  = 4.0;
         }
 
+        _vprovider = vprovider;
+        super(width, height, _vprovider.vertices);
         _vprovider.setPointCount(max_point_counts);
     }
 
@@ -160,11 +160,15 @@ int main(string[] args)
     int width = 1800;
     int height = 768;
 
-    VertexProvider vprovider = testVertexProvider();
+    auto dprovider = DataProvider(testData);
+    version(all)
+        auto vprovider = dprovider.vertex_provider;
+    else
+        auto vprovider = testVertexProvider();
 
     auto gui = new MyGui(width, height, vprovider);
-    auto max_value = vec3f(10000, 60000, 0);
-    auto min_value = vec3f(0, 0, 0);
+    auto max_value = vprovider.maximum;
+    auto min_value = vprovider.minimal;
     gui.setMatrices(max_value, min_value);
     gui.run();
     gui.close();

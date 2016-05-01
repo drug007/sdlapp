@@ -34,15 +34,126 @@ struct IntermediateData
     Point[] point;
 }
 
+struct TimestampSlider
+{
+private
+{
+    long[] _timestamp;
+    long   _idx;
+}
+
+    invariant
+    {
+        assert(_idx >= 0);
+        if(_timestamp.length)
+            assert(_idx < _timestamp.length);
+    }
+
+    this(long[] timestamp)
+    {
+        assert(timestamp.length);
+        _timestamp = timestamp;
+    }
+
+    auto current()
+    {
+        return _timestamp[_idx];
+    }
+
+    auto currIndex()
+    {
+        return _idx;
+    }
+
+    auto length()
+    {
+        return _timestamp.length;
+    }
+
+    auto set(ulong value)
+    {        
+        move(value - current);
+    }
+
+    auto setIndex(ulong idx)
+    {        
+        assert(idx >= 0);
+        if(_timestamp.length)
+            assert(idx < _timestamp.length);
+        _idx = idx;
+    }
+
+    auto moveNext()
+    {
+        if(_idx < _timestamp.length - 1)
+            _idx++;
+    }
+
+    auto movePrev()
+    {
+        if(_idx > 0)
+            _idx--;
+    }
+
+    auto move(long delta)
+    {
+        long lim = current + delta;
+
+        if(delta > 0)
+        {
+            while((current() < lim) && (_idx < _timestamp.length - 1))
+                moveNext();
+        }
+        else
+        {
+            while((current() > lim) && (_idx > 0))
+                movePrev(); 
+        }
+    }
+}
+
+unittest
+{   
+    import std.range: iota;
+    import std.array: array;
+
+    auto s = TimestampSlider(1.iota(10L).array);
+
+    assert(s.current == 1);
+    s.movePrev();
+    assert(s.current == 1);
+    s.moveNext();
+    assert(s.current == 2);
+    s.moveNext();
+    assert(s.current == 3);
+    s.move(3);
+    assert(s.current == 6);
+    s.move(2);
+    assert(s.current == 8);
+    s.move(5);
+    assert(s.current == 9);
+    s.move(-2);
+    assert(s.current == 7);
+    s.move(-3);
+    assert(s.current == 4);
+    s.move(-6);
+    assert(s.current == 1);
+}
+
 struct DataProvider
 {
 	// bounding box
 	vec3f minimal;
     vec3f maximum;
 
+    // time window
+    TimestampSlider timestamp_slider;
+
     IntermediateData[uint][uint] idata;
 
     VertexProvider vertex_provider;
+
+    Data[] data;
 
     private static auto intermediateToTarget(ref IntermediateData idt)
     {
@@ -56,14 +167,31 @@ struct DataProvider
             ));
     }
 
-    this(Data[] sdata)
+    this(Data[] data)
+    {
+    	import std.algorithm: map, sort, uniq;
+	    import std.array: array;
+
+    	this.data = data;
+    	setTimeWindow(long.min, long.max);
+
+    	long[] times = data.map!("a.timestamp").array.sort().uniq().array;
+    	timestamp_slider = TimestampSlider(times);
+    }
+
+    public void setTimeWindow(long start, long finish)
 	{
+		import std.algorithm: filter;
 	    import std.array: array, back;
 	    import std.math: isNaN;
 	    import vertex_provider: Vertex, VertexSlice;
 
 	    minimal = vec3f(float.max, float.max, float.max);
 	    maximum = vec3f(float.min_normal, float.min_normal, float.min_normal);
+
+	    auto sdata = data.filter!(a => a.timestamp > start && a.timestamp <= finish);
+
+	    idata = null;
 
 	    foreach(e; sdata)
 	    {

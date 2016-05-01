@@ -38,7 +38,14 @@ class MyGui : SdlGui
 
         _data_provider = dprovider;
         super(width, height, _data_provider.vertex_provider.vertices);
+        setTimeWindow();
+    }
+
+    private void setTimeWindow()
+    {
+        _data_provider.setTimeWindow(long.min, _data_provider.timestamp_slider.current);
         _data_provider.vertex_provider.setPointCount(max_point_counts);
+        setVertices(_data_provider.vertex_provider.vertices);
     }
 
     void close()
@@ -93,6 +100,19 @@ class MyGui : SdlGui
             if(old_value != max_point_counts)
             {
                 _data_provider.vertex_provider.setPointCount(max_point_counts);
+            }
+
+            with(_data_provider.timestamp_slider)
+            {
+                int curr_idx = cast(int) currIndex;
+                int min = 0;
+                int max = cast(int)(length)-1;
+                igSliderInt("Timestamp", &curr_idx, min, max);
+                if(curr_idx != currIndex)
+                {
+                    setIndex(curr_idx);
+                    setTimeWindow();
+                }
             }
             igEnd();
         }

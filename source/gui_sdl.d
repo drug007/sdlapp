@@ -123,6 +123,21 @@ class SdlGui
         _sdl2.destroy();
     }
 
+    public auto setVertices(Vertex[] vertices)
+    {
+        point_vbo.destroy();
+        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices);
+        indices = iota(0, vertices.length).map!"cast(uint)a".array;
+        
+        // prepare VAO
+        {
+            vao_points.bind();
+            point_vbo.bind();
+            vert_spec.use();
+            vao_points.unbind();
+        }   
+    }
+
     auto run()
     {
         import gfm.sdl2: SDL_GetTicks, SDL_QUIT, SDL_KEYDOWN, SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN,

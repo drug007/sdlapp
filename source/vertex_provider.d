@@ -13,7 +13,7 @@ struct VertexSlice
     size_t start, length;
 }
 
-struct VertexProvider
+class VertexProvider
 {
 	auto vertices()
 	{
@@ -66,12 +66,11 @@ private:
 	VertexSlice[] _slices, _curr_slices;
 	Vertex[]      _vertices;
     vec3f         _min, _max;
-
 }
 
 auto testVertexProvider()
 {
-	return VertexProvider(
+	return new VertexProvider(
 		// Vertices
 	[
         Vertex(vec3f(-1092.77, 3109.23, 0), vec4f(1, 0, 0, 1)),

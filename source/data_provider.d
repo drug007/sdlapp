@@ -151,7 +151,7 @@ struct DataProvider
 
     IntermediateData[uint][uint] idata;
 
-    VertexProvider vertex_provider;
+    VertexProvider[] vertex_provider;
 
     Data[] data;
 
@@ -167,6 +167,34 @@ struct DataProvider
             ));
     }
 
+    private static auto intermediateToTriangle(ref IntermediateData idt)
+    {
+    	import std.algorithm: map;
+	    import vertex_provider: Vertex;
+
+        auto color = sourceToColor(idt.id.source);
+        auto jagged = idt.point.map!(a => [
+        	Vertex(
+                a.xyz - vec3f(5000, 0, 0),
+                color,
+            ),
+            Vertex(
+                a.xyz - vec3f(0, 5000, 0),
+                color,
+            ),
+            Vertex(
+                a.xyz - vec3f(5000, 5000, 0),
+                color,
+            ),
+            ]);
+
+        Vertex[] flatten;
+        foreach(e; jagged)
+        	flatten ~= e;
+
+        return flatten;
+    }
+
     this(Data[] data)
     {
     	import std.algorithm: map, sort, uniq;
@@ -177,6 +205,20 @@ struct DataProvider
 
     	long[] times = data.map!("a.timestamp").array.sort().uniq().array;
     	timestamp_slider = TimestampSlider(times);
+    }
+
+    public void close()
+    {
+	    foreach(ref vp; vertex_provider)
+	    {
+	    	vp.destroy();
+	    }
+    }
+
+    public void setPointCount(int n)
+    {
+    	foreach(ref vp; vertex_provider)
+    		vp.setPointCount(n);
     }
 
     public void setTimeWindow(long start, long finish)
@@ -239,20 +281,28 @@ struct DataProvider
 	        }
 	    }
 
-	    Vertex[] vertices;
-	    VertexSlice[] slices;
+	    Vertex[] vertices, vertices2;
+	    VertexSlice[] slices, slices2;
 
 	    foreach(source; idata)
 	    {
 	        foreach(no; source)
 	        {
-	            slices ~= VertexSlice(vertices.length, 0);
-	            vertices ~= intermediateToTarget(no).array;
+	            slices  ~= VertexSlice(vertices.length, 0);
+	            slices2 ~= VertexSlice(vertices.length*3, 0);
+	            vertices  ~= intermediateToTarget(no).array;
+	            vertices2 ~= intermediateToTriangle(no).array;
 	            slices.back.length = vertices.length - slices.back.start;
+	            slices2.back.length = 3*slices.back.length;
 	        }
 	    }
 
-	    vertex_provider = VertexProvider(vertices, slices, minimal, maximum);
+	    close();
+
+	    vertex_provider = [
+	    	new VertexProvider(vertices2, slices2, minimal, maximum),
+	    	new VertexProvider(vertices, slices, minimal, maximum),
+	    ];
     }
 }
 

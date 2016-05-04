@@ -27,11 +27,67 @@ import gfm.sdl2: SDL2, SDL2Window, SDL_GL_SetAttribute, SharedLibVersion,
     SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION, SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT,
     SDL_BUTTON_MIDDLE, SDLK_SPACE, SDL_MOUSEWHEEL, SDL_KEYUP;
 
-import vertex_provider: Vertex, VertexProvider;
+import vertex_provider: Vertex, VertexSlice, VertexProvider;
+
+struct GLProvider
+{
+    this(ref OpenGL gl, ref GLProgram program, Vertex[] vertices)
+    {
+        freeResources();
+
+        _vbo = new GLBuffer(gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices);
+        _indices     = iota(0, vertices.length).map!"cast(uint)a".array;
+
+        // Create an OpenGL vertex description from the Vertex structure.
+        _vert_spec = new VertexSpecification!Vertex(program);
+
+        _vao_points = new GLVAO(gl);
+        // prepare VAO
+        {
+            _vao_points.bind();
+            _vbo.bind();
+            _vert_spec.use();
+            _vao_points.unbind();
+        }
+    }
+
+    ~this()
+    {
+        freeResources();
+    }
+
+    void drawVertices(VertexSlice[] slices)
+    {
+        _vao_points.bind();
+        foreach(vslice; slices)
+        {
+            auto length = cast(int) vslice.length;
+            auto start  = cast(int) vslice.start;
+            glDrawElements(GL_LINE_STRIP, length, GL_UNSIGNED_INT, &_indices[start]);
+            glDrawArrays(GL_POINTS, start, length);
+        }
+        _vao_points.unbind();
+    }
+
+    void freeResources()
+    {
+        if(_vbo)
+            _vbo.destroy();
+        if(_vert_spec)
+            _vert_spec.destroy(); 
+        if(_vao_points)
+            _vao_points.destroy();
+    }
+
+    uint[]        _indices;
+    GLBuffer      _vbo;
+    GLVAO         _vao_points;
+    VertexSpecification!Vertex _vert_spec;
+}
 
 class SdlGui
 {
-    this(int width, int height, ref VertexProvider vertex_provider)
+    this(int width, int height)
     {
         this.width = width;
         this.height = height;
@@ -96,26 +152,12 @@ class SdlGui
         };
 
         program = new GLProgram(_gl, program_source);
-        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertex_provider.vertices);
-        indices = iota(0, vertex_provider.vertices.length).map!"cast(uint)a".array;
-        
-        // Create an OpenGL vertex description from the Vertex structure.
-        vert_spec = new VertexSpecification!Vertex(program);
-
-        vao_points = new GLVAO(_gl);
-        // prepare VAO
-        {
-            vao_points.bind();
-            point_vbo.bind();
-            vert_spec.use();
-            vao_points.unbind();
-        }
     }
 
     ~this()
     {
-        point_vbo.destroy();
-        vao_points.destroy();
+        foreach(gp; _glprovider)
+            gp.destroy();
         program.destroy();
 
         _gl.destroy();
@@ -123,19 +165,24 @@ class SdlGui
         _sdl2.destroy();
     }
 
-    public auto setVertices(ref VertexProvider vertex_provider)
+    public auto setVertexProvider(VertexProvider[] vertex_provider)
     {
-        point_vbo.destroy();
-        point_vbo = new GLBuffer(_gl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertex_provider.vertices);
-        indices = iota(0, vertex_provider.vertices.length).map!"cast(uint)a".array;
+        import std.range: lockstep;
         
-        // prepare VAO
+        _vertex_provider = vertex_provider;
+
+        if(_vertex_provider.length > _glprovider.length)
+            _glprovider.length = _vertex_provider.length;
+        
+        foreach(ref vp, ref gp; lockstep(vertex_provider, _glprovider))
         {
-            vao_points.bind();
-            point_vbo.bind();
-            vert_spec.use();
-            vao_points.unbind();
-        }   
+            if(gp._vao_points is null)
+                gp = GLProvider(_gl, program, vp.vertices());
+            else
+                gp._vbo.setData(vp.vertices());
+
+            gp._indices = iota(0, vp.vertices.length).map!"cast(uint)a".array;
+        }
     }
 
     auto run()
@@ -173,6 +220,17 @@ class SdlGui
         }
     }
 
+    void drawObjects()
+    {
+        import std.range: lockstep;
+
+        glPointSize(5.);
+        foreach(vp, ref gp; lockstep(_vertex_provider, _glprovider))
+        {
+            gp.drawVertices(vp.currSlices);
+        }
+    }
+
     void draw()
     {
         // clear the whole window
@@ -203,10 +261,8 @@ protected:
     OpenGL _gl;
     SDL2 _sdl2;        
     GLProgram program;
-    GLBuffer point_vbo;
-    uint[] indices;
-    VertexSpecification!Vertex vert_spec;
-    GLVAO vao_points;
+    VertexProvider[] _vertex_provider;
+    GLProvider[]     _glprovider;
 
     void updateMatrices(ref const(vec3f) max_space, ref const(vec3f) min_space)
     {

@@ -37,38 +37,24 @@ class MyGui : SdlGui
         }
 
         _data_provider = dprovider;
-        super(width, height, _data_provider.vertex_provider);
+        super(width, height);
         setTimeWindow();
     }
 
     private void setTimeWindow()
     {
         _data_provider.setTimeWindow(long.min, _data_provider.timestamp_slider.current);
-        _data_provider.vertex_provider.setPointCount(max_point_counts);
-        setVertices(_data_provider.vertex_provider);
+        _data_provider.setPointCount(max_point_counts);
+        setVertexProvider(_data_provider.vertex_provider);
     }
 
     void close()
     {
         import gui_imgui: shutdown;
 
+        _data_provider.close();
+
         shutdown();
-    }
-
-    /// Data rendering
-    private void drawObjects()
-    {
-        glPointSize(5.);
-        vao_points.bind();
-        foreach(vslice; _data_provider.vertex_provider.currSlices)
-        {
-            auto length = cast(int) vslice.length;
-            auto start  = cast(int) vslice.start;
-
-            glDrawElements(GL_LINE_STRIP, length, GL_UNSIGNED_INT, &indices[start]);
-            glDrawArrays(GL_POINTS, start, length);
-        }
-        vao_points.unbind();
     }
 
     /// Set imgui internal state according to SDL event
@@ -99,7 +85,7 @@ class MyGui : SdlGui
             igSliderInt("Max point counts", &max_point_counts, 1, 32);
             if(old_value != max_point_counts)
             {
-                _data_provider.vertex_provider.setPointCount(max_point_counts);
+                _data_provider.setPointCount(max_point_counts);
             }
 
             with(_data_provider.timestamp_slider)

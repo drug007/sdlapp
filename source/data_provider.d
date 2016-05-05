@@ -170,20 +170,25 @@ struct DataProvider
     private static auto intermediateToTriangle(ref IntermediateData idt)
     {
     	import std.algorithm: map;
+        import std.math: sqrt, sin, PI, tan;
 	    import vertex_provider: Vertex;
 
-        auto color = sourceToColor(idt.id.source);
+        enum h = 500.;
+
+        auto color = vec4f(0.1, 0.99, 0.2, 1);
+        auto c = h*tan(PI/6);
+        auto b = h*sin(PI/3) - c;
         auto jagged = idt.point.map!(a => [
         	Vertex(
-                a.xyz - vec3f(5000, 0, 0),
+                a.xyz + vec3f(0, c, 0),
                 color,
             ),
             Vertex(
-                a.xyz - vec3f(0, 5000, 0),
+                a.xyz + vec3f(-h/2, -b, 0),
                 color,
             ),
             Vertex(
-                a.xyz - vec3f(5000, 5000, 0),
+                a.xyz + vec3f(+h/2, -b, 0),
                 color,
             ),
             ]);
@@ -288,8 +293,8 @@ struct DataProvider
 	    {
 	        foreach(no; source)
 	        {
-	            slices  ~= VertexSlice(vertices.length, 0);
-	            slices2 ~= VertexSlice(vertices.length*3, 0);
+	            slices  ~= VertexSlice(VertexSlice.Kind.LineStrip, vertices.length, 0);
+	            slices2 ~= VertexSlice(VertexSlice.Kind.Triangles, vertices.length*3, 0);
 	            vertices  ~= intermediateToTarget(no).array;
 	            vertices2 ~= intermediateToTriangle(no).array;
 	            slices.back.length = vertices.length - slices.back.start;
@@ -300,8 +305,8 @@ struct DataProvider
 	    close();
 
 	    vertex_provider = [
-	    	new VertexProvider(vertices2, slices2, minimal, maximum),
 	    	new VertexProvider(vertices, slices, minimal, maximum),
+            new VertexProvider(vertices2, slices2, minimal, maximum),
 	    ];
     }
 }

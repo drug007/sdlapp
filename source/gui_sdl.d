@@ -63,8 +63,7 @@ struct GLProvider
         {
             auto length = cast(int) vslice.length;
             auto start  = cast(int) vslice.start;
-            glDrawElements(GL_LINE_STRIP, length, GL_UNSIGNED_INT, &_indices[start]);
-            glDrawArrays(GL_POINTS, start, length);
+            glDrawElements(vslice.glKind, length, GL_UNSIGNED_INT, &_indices[start]);
         }
         _vao_points.unbind();
     }

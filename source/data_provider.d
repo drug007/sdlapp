@@ -175,27 +175,27 @@ struct DataProvider
 
         enum h = 500.;
 
+        Vertex[] flatten;
+        flatten.reserve(idt.point.length*3);
         auto color = vec4f(0.1, 0.99, 0.2, 1);
         auto c = h*tan(PI/6);
         auto b = h*sin(PI/3) - c;
-        auto jagged = idt.point.map!(a => [
-        	Vertex(
+
+        foreach(a; idt.point)
+        {
+        	flatten ~= Vertex(
                 a.xyz + vec3f(0, c, 0),
                 color,
-            ),
-            Vertex(
+            );
+            flatten ~= Vertex(
                 a.xyz + vec3f(-h/2, -b, 0),
                 color,
-            ),
-            Vertex(
+            );
+            flatten ~= Vertex(
                 a.xyz + vec3f(+h/2, -b, 0),
                 color,
-            ),
-            ]);
-
-        Vertex[] flatten;
-        foreach(e; jagged)
-        	flatten ~= e;
+            );
+        }
 
         return flatten;
     }
@@ -296,7 +296,7 @@ struct DataProvider
 	            slices  ~= VertexSlice(VertexSlice.Kind.LineStrip, vertices.length, 0);
 	            slices2 ~= VertexSlice(VertexSlice.Kind.Triangles, vertices.length*3, 0);
 	            vertices  ~= intermediateToTarget(no).array;
-	            vertices2 ~= intermediateToTriangle(no).array;
+	            vertices2 ~= intermediateToTriangle(no);
 	            slices.back.length = vertices.length - slices.back.start;
 	            slices2.back.length = 3*slices.back.length;
 	        }

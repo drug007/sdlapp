@@ -1,4 +1,4 @@
-module gui_imgui;
+module imgui_helpers;
 
 import derelict.imgui.imgui;
 import gfm.opengl: GLuint, GLint;

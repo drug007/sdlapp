@@ -1,4 +1,4 @@
-module gui_sdl;
+module base_gui;
 
 import std.algorithm: map;
 import std.array: array;
@@ -84,7 +84,7 @@ struct GLProvider
     VertexSpecification!Vertex _vert_spec;
 }
 
-class SdlGui
+class BaseGui
 {
     this(int width, int height)
     {

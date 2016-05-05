@@ -65,6 +65,11 @@ private
         return _idx;
     }
 
+    auto timeByIndex(long idx)
+    {
+        return _timestamp[idx];
+    }
+
     auto length()
     {
         return _timestamp.length;

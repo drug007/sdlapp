@@ -10,6 +10,14 @@ import gfm.sdl2: SDL_Event;
 import vertex_provider: VertexProvider, testVertexProvider;
 import data_provider: testData, DataProvider;
 
+private static auto timeToStringz(long timestamp)
+{
+    import std.datetime: SysTime;
+    import std.string: toStringz;
+
+    return timestamp.SysTime.toUTC.toISOExtString[$-9..$].toStringz;
+}
+
 class MyGui : SdlGui
 {
     private
@@ -99,6 +107,17 @@ class MyGui : SdlGui
                     setIndex(curr_idx);
                     setTimeWindow();
                 }
+                igText("Min time");
+                igSameLine();
+                igText(timeByIndex(min).timeToStringz);
+                igSameLine();
+                igText("Current time");
+                igSameLine();
+                igText(current.timeToStringz);
+                igSameLine();
+                igText("Max time");
+                igSameLine();
+                igText(timeByIndex(max).timeToStringz);
             }
             igEnd();
         }

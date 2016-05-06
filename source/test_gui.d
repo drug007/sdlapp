@@ -23,6 +23,7 @@ class TestGui : BaseGui
         bool show_test_window    = false;
         bool show_another_window = false;
         bool show_settings       = true;
+        bool show_properties     = true;
 
         int max_point_counts = 2;
 
@@ -85,7 +86,7 @@ class TestGui : BaseGui
         {
             igSetNextWindowSize(ImVec2(400,600), ImGuiSetCond_FirstUseEver);
             igBegin("Settings", &show_settings);
-            auto old_value = max_point_counts;
+            const old_value = max_point_counts;
             igSliderInt("Max point counts", &max_point_counts, 1, 32);
             if(old_value != max_point_counts)
             {
@@ -114,6 +115,36 @@ class TestGui : BaseGui
                 igText("Max time");
                 igSameLine();
                 igText(timeByIndex(max).timeToStringz);
+            }
+            igEnd();
+        }
+
+        {
+            igSetNextWindowSize(ImVec2(400,600), ImGuiSetCond_FirstUseEver);
+            igBegin("Properties", &show_properties);
+            if (igTreeNode("Tree"))
+            {
+                foreach (key; _data_provider.idata.byKey)
+                {
+                    if (igTreeNodePtr(cast(void*)key, "Source %d", key))
+                    {
+                        foreach(pair; _data_provider.idata[key].byKeyValue())
+                        {
+                            if (igTreeNodePtr(cast(void*)pair.key, "No: %d", pair.key))
+                            {
+                                foreach(p; pair.value.point)
+                                {
+                                    import std.conv: text;
+                                    import std.string: toStringz;
+                                    igText(p.xyz.text.toStringz);
+                                }
+                                igTreePop();
+                            }
+                        }
+                        igTreePop();
+                    }
+                }
+                igTreePop();
             }
             igEnd();
         }

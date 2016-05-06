@@ -158,21 +158,20 @@ struct DataProvider
 
     VertexProvider[] vertex_provider;
 
-    Data[] data;
+    Data[] raw_data;
 
-    private static auto intermediateToTarget(ref IntermediateData idt)
+    private static auto intermediateToTarget(T)(ref const(vec4f) color, ref T points)
     {
     	import std.algorithm: map;
 	    import vertex_provider: Vertex;
 
-        auto color = sourceToColor(idt.id.source);
-        return idt.point.map!(a => Vertex(
+        return points.map!(a => Vertex(
                 a.xyz,
                 color,
             ));
     }
 
-    private static auto intermediateToTriangle(ref IntermediateData idt)
+    private static auto intermediateToTriangle(T)(ref const(vec4f) color, ref T points)
     {
     	import std.algorithm: map;
         import std.math: sqrt, sin, PI, tan;
@@ -181,12 +180,10 @@ struct DataProvider
         enum h = 500.;
 
         Vertex[] flatten;
-        flatten.reserve(idt.point.length*3);
-        auto color = vec4f(0.1, 0.99, 0.2, 1);
         auto c = h*tan(PI/6);
         auto b = h*sin(PI/3) - c;
 
-        foreach(a; idt.point)
+        foreach(a; points)
         {
         	flatten ~= Vertex(
                 a.xyz + vec3f(0, c, 0),
@@ -210,8 +207,8 @@ struct DataProvider
     	import std.algorithm: map, sort, uniq;
 	    import std.array: array;
 
-    	this.data = data;
-    	setTimeWindow(long.min, long.max);
+    	this.raw_data = data;
+    	processData();
 
     	long[] times = data.map!("a.timestamp").array.sort().uniq().array;
     	timestamp_slider = TimestampSlider(times);
@@ -231,7 +228,7 @@ struct DataProvider
     		vp.setPointCount(n);
     }
 
-    public void setTimeWindow(long start, long finish)
+    private void processData()
 	{
 		import std.algorithm: filter;
 	    import std.array: array, back;
@@ -241,11 +238,9 @@ struct DataProvider
 	    minimal = vec3f(float.max, float.max, float.max);
 	    maximum = vec3f(float.min_normal, float.min_normal, float.min_normal);
 
-	    auto sdata = data.filter!(a => a.timestamp > start && a.timestamp <= finish);
-
 	    idata = null;
 
-	    foreach(e; sdata)
+	    foreach(e; raw_data)
 	    {
 	        auto s = idata.get(e.id.source, null);
 
@@ -290,6 +285,14 @@ struct DataProvider
 	        		minimal.z = e.z;
 	        }
 	    }
+    }
+
+    public void setTimeWindow(long start, long finish)
+	{
+		import std.algorithm: filter;
+	    import std.array: array, back;
+	    import std.math: isNaN;
+	    import vertex_provider: Vertex, VertexSlice;
 
 	    Vertex[] vertices, vertices2;
 	    VertexSlice[] slices, slices2;
@@ -298,10 +301,13 @@ struct DataProvider
 	    {
 	        foreach(no; source)
 	        {
-	            slices  ~= VertexSlice(VertexSlice.Kind.LineStrip, vertices.length, 0);
+	        	slices  ~= VertexSlice(VertexSlice.Kind.LineStrip, vertices.length, 0);
 	            slices2 ~= VertexSlice(VertexSlice.Kind.Triangles, vertices.length*3, 0);
-	            vertices  ~= intermediateToTarget(no).array;
-	            vertices2 ~= intermediateToTriangle(no);
+	            auto filtered_points = no.point.filter!(a => a.timestamp > start && a.timestamp <= finish);
+	            auto color = sourceToColor(no.id.source);
+	            vertices  ~= intermediateToTarget(color, filtered_points).array;
+	            color = vec4f(0.1, 0.99, 0.2, 1);
+	            vertices2 ~= intermediateToTriangle(color, filtered_points).array;
 	            slices.back.length = vertices.length - slices.back.start;
 	            slices2.back.length = 3*slices.back.length;
 	        }

@@ -89,7 +89,7 @@ class VertexProvider
             auto nn = n;
             if(cs.kind == VertexSlice.Kind.Triangles)
                 nn = n*3;
-            cs.length = min(cast(int) (s.length), nn);
+            cs.length = min(cast(int) s.length, nn);
             cs.start = cast(int) (s.start + s.length - cs.length);
         }
 	}

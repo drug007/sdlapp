@@ -122,17 +122,17 @@ class TestGui : BaseGui
         {
             igSetNextWindowSize(ImVec2(400,600), ImGuiSetCond_FirstUseEver);
             igBegin("Properties", &show_properties);
-            if (igTreeNode("Tree"))
+            if (igTreeNode("Source"))
             {
-                foreach (key; _data_provider.idata.byKey)
+                foreach (sid; _data_provider.sorted_idata)
                 {
-                    if (igTreeNodePtr(cast(void*)key, "Source %d", key))
+                    if (igTreeNodePtr(cast(void*)sid.id.source, "%d", sid.id.source))
                     {
-                        foreach(pair; _data_provider.idata[key].byKeyValue())
+                        foreach(oid; sid.obj_id)
                         {
-                            if (igTreeNodePtr(cast(void*)pair.key, "No: %d", pair.key))
+                            if (igTreeNodePtr(cast(void*)oid.no, "%d", oid.no))
                             {
-                                foreach(p; pair.value.point)
+                                foreach(p; _data_provider.idata[sid.id.source][oid.no].point)
                                 {
                                     import std.conv: text;
                                     import std.string: toStringz;

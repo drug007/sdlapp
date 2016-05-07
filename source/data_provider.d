@@ -8,6 +8,19 @@ struct Id
 {
     uint source;
     uint no;
+
+    int opCmp(ref const(Id) other)
+    {
+    	if(source < other.source)
+    		return -1;
+    	if(source > other.source)
+    		return 1;
+    	if(no < other.no)
+    		return -1;
+    	if(no > other.no)
+    		return 1;
+    	return 0;
+    }
 }
 
 struct Data
@@ -145,6 +158,14 @@ unittest
     assert(s.current == 1);
 }
 
+struct SortedIData
+{
+	// source no
+	Id id;
+	// sorted range of corresponding objects
+	Id[] obj_id;
+}
+
 struct DataProvider
 {
 	// bounding box
@@ -155,6 +176,8 @@ struct DataProvider
     TimestampSlider timestamp_slider;
 
     IntermediateData[uint][uint] idata;
+    // Sorted range of intermediate data
+    SortedIData[] sorted_idata;
 
     VertexProvider[] vertex_provider;
 
@@ -208,7 +231,7 @@ struct DataProvider
 	    import std.array: array;
 
     	this.raw_data = data;
-    	processData();
+    	prepareData();
 
     	long[] times = data.map!("a.timestamp").array.sort().uniq().array;
     	timestamp_slider = TimestampSlider(times);
@@ -228,9 +251,9 @@ struct DataProvider
     		vp.setPointCount(n);
     }
 
-    private void processData()
+    private void prepareData()
 	{
-		import std.algorithm: filter;
+		import std.algorithm: filter, sort, map;
 	    import std.array: array, back;
 	    import std.math: isNaN;
 	    import vertex_provider: Vertex, VertexSlice;
@@ -284,6 +307,15 @@ struct DataProvider
 	        	if(e.z < minimal.z)
 	        		minimal.z = e.z;
 	        }
+	    }
+
+	    sorted_idata = idata.keys.sort().map!(a => SortedIData(Id(a, 0), null)).array;
+	    foreach(ref sid; sorted_idata)
+	    {
+	    	foreach(obj; idata[sid.id.source].values.sort!"a.id<b.id"())
+	    	{
+		    	sid.obj_id ~= obj.id;
+		    }
 	    }
     }
 

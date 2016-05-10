@@ -240,6 +240,9 @@ class BaseGui
         window.swapBuffers();
     }
 
+    int getMouseX() const { return mouse_x; }
+    int getMouseY() const { return mouse_y; }
+
 protected:
     SDL2Window window;
     int width;

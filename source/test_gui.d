@@ -76,7 +76,7 @@ class TestGui : BaseGui
         import derelict.imgui.imgui: igText, igButton, igBegin, igEnd, igRender, igGetIO,
             igSliderFloat, igColorEdit3, igTreePop, igTreeNode, igSameLine, igSmallButton,
             ImGuiIO, igSetNextWindowSize, igSetNextWindowPos, igTreeNodePtr, igShowTestWindow,
-            ImVec2, ImGuiSetCond_FirstUseEver, igSliderInt;
+            ImVec2, ImGuiSetCond_FirstUseEver, igSliderInt, igCheckbox;
 		import imgui_helpers: imguiNewFrame;
         
         ImGuiIO* io = igGetIO();
@@ -126,6 +126,9 @@ class TestGui : BaseGui
             {
                 foreach (sid; _data_provider.sorted_idata)
                 {
+                    auto tmp = true;
+                    igCheckbox("", &tmp);
+                    igSameLine();
                     if (igTreeNodePtr(cast(void*)sid.id.source, "%d", sid.id.source))
                     {
                         foreach(oid; sid.obj_id)

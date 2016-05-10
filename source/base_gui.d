@@ -248,8 +248,6 @@ protected:
     int mouse_x, mouse_y;
     int leftButton, rightButton, middleButton;
 
-    // Определяет нужно выделять экстраполированные донесения
-    bool highlight_predicted;
     float camera_x = 0, camera_y = 0;
 
     float size;

@@ -9,7 +9,7 @@ import std.range: iota;
 
 import std.experimental.logger: Logger, NullLogger;
 
-import gfm.math: mat4f, vec3f, vec4f;
+import gfm.math: mat4f, vec3f, vec4f, ray3f, vec2i, vec3i, planef, dot;
 import gfm.opengl: OpenGL, GLProgram, GLBuffer, VertexSpecification, GLVAO,
     glClearColor, glEnable, glBlendFunc, glDisable, glViewport, glClear,
     glDrawArrays, glDrawElements, glPointSize, 
@@ -240,6 +240,40 @@ class BaseGui
         window.swapBuffers();
     }
 
+    int mouseX() const { return mouse_x; }
+    int mouseY() const { return mouse_y; }
+
+    ray3f pixelToWorldCoordsRay(int x, int y) const
+    {
+        vec3f farPoint;
+        vec3f nearPoint;
+
+        vec3i screenCoords = vec3i(mouse_x, mouse_y, 1);
+        unProject(screenCoords, model, projection, vec2i(width, height), farPoint);
+
+        screenCoords.z = 0;
+        unProject(screenCoords, model, projection, vec2i(width, height), nearPoint);
+
+        return ray3f(nearPoint, farPoint - nearPoint);
+    }
+
+    vec3f pixelToEarthPlaneCoords(int x, int y) const
+    {
+        // Просто ищем пересечение луча с мировой плоскостью на высоте 0
+        const ray = pixelToWorldCoordsRay(x, y);
+        const plane = planef(vec3f(0, 0, 0), vec3f(0, 0, 1));
+
+        // Поиск пересечения плоскости и луча
+        const V = -ray.orig;
+        const d = dot(plane.n, V);
+        const e = dot(plane.n, ray.dir);
+
+        assert(!(e == 0 && d == 0), "Camera smashed into the ground");
+        assert(!(e == 0 && d != 0), "Camera looks into horizon");
+
+        return ray.orig + ray.dir * d/e;
+    }
+
 protected:
     SDL2Window window;
     int width;
@@ -366,4 +400,27 @@ protected:
             default:
         }
     }
+}
+
+/// same as gluUnProject
+private void unProject(vec3i win, mat4f model, mat4f proj, vec2i viewport, out vec3f world)
+{
+    auto finalMatrix = model * proj;
+    finalMatrix = finalMatrix.inverse;
+
+    vec4f _in;
+    _in.xyz = win;
+
+    /* Map x and y from window coordinates */
+    _in.x = _in.x / viewport.x;
+    _in.y = _in.y / viewport.y;
+
+    /* Map to range -1 to 1 */
+    _in = _in * 2 - 1;
+    _in[3] = 1.0;
+
+    auto _out = finalMatrix * _in;
+    assert(_out[3] != 0.0);
+
+    world = _out.xyz / _out[3];
 }

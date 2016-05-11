@@ -240,8 +240,8 @@ class BaseGui
         window.swapBuffers();
     }
 
-    int getMouseX() const { return mouse_x; }
-    int getMouseY() const { return mouse_y; }
+    int mouseX() const { return mouse_x; }
+    int mouseY() const { return mouse_y; }
 
 protected:
     SDL2Window window;

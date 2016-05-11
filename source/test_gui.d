@@ -159,7 +159,7 @@ class TestGui : BaseGui
             if (igButton("Test Window")) show_test_window ^= 1;
             if (igButton("Another Window")) show_another_window ^= 1;
             igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);
-            igText("Cursor coords %i %i", getMouseX, getMouseX);
+            igText("Cursor coords %i %i", mouseX, mouseY);
         }
         
         // 2. Show another simple window, this time using an explicit Begin/End pair
